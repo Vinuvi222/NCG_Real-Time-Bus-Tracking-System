@@ -3,10 +3,26 @@ import Driver from "../models/driver.model.js";
 
 const router = express.Router();
 
+//password validation function
+const isValidPassword = (password) => {
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&])[A-Za-z\d@$!%*?#&]{8,}$/;
+
+  return passwordRegex.test(password);
+};
+
+
 // add a driver
 router.post("/add", async (req, res) => {
   try {
     const { username, email, phone_num , password } = req.body;
+
+      if (!isValidPassword(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character"
+      });
+    }
 
     const driver = new Driver({
       username,
@@ -55,6 +71,13 @@ router.put("/update/:id", async (req, res) => {
       req.body,
       { new: true }
     );
+
+    if (password && !isValidPassword(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character"
+      });
+    }
 
     if (!updatedDriver) {
       return res.status(404).json({ message: "Driver not found" });
