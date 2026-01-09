@@ -20,5 +20,22 @@ router.post('/add-location', async (req, res) => {
   }
 });
 
+// GET latest location of a bus
+router.get('/latest/:busNumber', async (req, res) => {
+  try {
+    const busNumber = req.params.busNumber;
+
+    const latestLocation = await Locations.getLatest(busNumber);
+
+    if (!latestLocation) {
+      return res.status(404).json({ message: 'No location found for this bus.' });
+    }
+
+    res.status(200).json({ message: 'Latest location retrieved', data: latestLocation });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;
 
