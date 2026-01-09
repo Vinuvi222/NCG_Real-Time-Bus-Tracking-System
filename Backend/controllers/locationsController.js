@@ -1,6 +1,8 @@
 import express from 'express';
 import Locations from '../models/locationsModel.js';  
 
+import { broadcastBusLocation } from '../wsServer.js';
+
 const router = express.Router();
 
 router.post('/add-location', async (req, res) => {
@@ -13,6 +15,16 @@ router.post('/add-location', async (req, res) => {
     }
 
     const data = await Locations.add({ busNumber, latitude, longitude, speed, timestamp });
+
+    // Broadcast new location to all connected WebSocket clients
+    broadcastBusLocation({
+      busNumber,
+      latitude,
+      longitude,
+      speed,
+      timestamp
+    });
+
 
     res.status(201).json({ message: 'Location saved successfully!', data });
   } catch (error) {
