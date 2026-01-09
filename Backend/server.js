@@ -11,6 +11,9 @@ import loginRoutes from './routes/auth.route.js';
 import addingRoutes from './routes/adding.routes.js';
 import locationRoutes from './controllers/locationsController.js';
 
+import './wsServer.js';
+
+
 
 const app = express();
 
@@ -20,7 +23,7 @@ app.use(express.json());
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8070;
+const PORT = process.env.PORT || 5000;
 
 const URL = process.env.MONGODB_URL;
 mongoose.connect(URL);
