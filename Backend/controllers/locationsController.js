@@ -7,30 +7,21 @@ const router = express.Router();
 
 router.post('/add-location', async (req, res) => {
   try {
-    const { busNumber, latitude, longitude, speed, timestamp } = req.body;
+    const { busNumber, latitude, longitude, speed } = req.body;
 
-    // validation
-    if (!busNumber || !latitude || !longitude || !speed || !timestamp) {
-      return res.status(400).json({ message: 'All fields are required.' });
-    }
+    // Add location, PostgreSQL automatically sets timestamp
+    const data = await Locations.add({ busNumber, latitude, longitude, speed });
 
-    const data = await Locations.add({ busNumber, latitude, longitude, speed, timestamp });
-
-    // Broadcast new location to all connected WebSocket clients
-    broadcastBusLocation({
-      busNumber,
-      latitude,
-      longitude,
-      speed,
-      timestamp
-    });
-
+    // Broadcast to WebSocket clients
+    broadcastBusLocation(data[0]); // data[0] has the timestamp set by DB
 
     res.status(201).json({ message: 'Location saved successfully!', data });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
+
 
 // GET latest location of a bus
 router.get('/latest/:busNumber', async (req, res) => {
