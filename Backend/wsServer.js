@@ -1,19 +1,11 @@
 import WebSocket, { WebSocketServer } from 'ws';
-import Locations from './models/locationsModel.js';
 
-const wss = new WebSocketServer({ port: 8080 });  
-
-// Store connected clients
+const wss = new WebSocketServer({ port: 8080 });
 const clients = new Set();
 
 wss.on('connection', (ws) => {
   console.log('Passenger connected via WebSocket');
   clients.add(ws);
-
-  ws.on('message', (message) => {
-    console.log('Received from client:', message);
-     
-  });
 
   ws.on('close', () => {
     console.log('Passenger disconnected');
@@ -21,7 +13,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Function to broadcast location to all connected passengers
+// Function to broadcast a location to all connected clients
 export function broadcastBusLocation(busData) {
   const data = JSON.stringify(busData);
   clients.forEach(client => {
@@ -31,8 +23,5 @@ export function broadcastBusLocation(busData) {
   });
 }
 
- 
- 
-
-
 console.log('WebSocket server running on ws://localhost:8080');
+
