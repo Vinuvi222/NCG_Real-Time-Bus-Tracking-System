@@ -7,16 +7,48 @@ const router = express.Router();
  * @route   POST /api/buses
  * @desc    Create a new bus
  */
+// Add Bus
 router.post("/add", async (req, res) => {
   try {
-    const bus = new Bus(req.body);
+    const { busNumber, model, permitId, seats } = req.body;
+
+    //   Validate required fields
+    if (!busNumber || !model || !permitId || !seats) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    //  Check if bus number already exists
+    const existingBus = await Bus.findOne({ busNumber });
+    if (existingBus) {
+      return res.status(409).json({ message: "Bus number already exists" });
+    }
+
+    //   Validate permit exists
+    const permit = await Permit.findById(permitId);
+    if (!permit) {
+      return res.status(404).json({ message: "Permit not found" });
+    }
+
+    //  Create Bus
+    const bus = new Bus({
+      busNumber,
+      model,
+      seats,
+      permitId, // link Bus → Permit
+      status: "inactive"
+    });
     await bus.save();
-    res.status(201).json(bus);
+
+    //  Add Bus to Permit.buses array
+    permit.buses.push(bus._id);
+    await permit.save();
+
+    res.status(201).json({ message: "Bus created successfully", bus });
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
-
 /**
  * @route   GET /api/buses
  * @desc    Get all buses
