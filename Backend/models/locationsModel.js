@@ -6,29 +6,22 @@ const Locations = {
   async add({ busNumber, latitude, longitude, speed }) {
     const { data, error } = await supabase
       .from(this.tableName)
-      .insert([
-        {
-          busnumber: busNumber,
-          latitude,
-          longitude,
-          speed
-        }
-      ])
+      .insert([{ busnumber: busNumber, latitude, longitude, speed }])
       .select(); // returns inserted row
 
-        console.log('Inserted row:', data); 
-
     if (error) throw error;
-    return data;
+
+    console.log('Inserted row:', data);
+
+    return data; // always returns the inserted row
   },
 
-  // Get latest location of a bus
   async getLatest(busNumber) {
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
       .eq('busnumber', busNumber)
-      .order('timestamp', { ascending: false }) // latest first
+      .order('timestamp', { ascending: false })
       .limit(1);
 
     if (error) throw error;
@@ -37,6 +30,7 @@ const Locations = {
 };
 
 export default Locations;
+
 
 
 
