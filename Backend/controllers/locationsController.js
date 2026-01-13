@@ -1,30 +1,76 @@
+// controllers/locationsController.js
+
 import Locations from '../models/locationsModel.js';
 import { broadcastBusLocation } from '../wsServer.js';
 
+ 
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(Δφ / 2) ** 2 +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) ** 2;
+
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/* 🔹 THIS IS YOUR MAIN CONTROLLER */
 export const addLocation = async (req, res) => {
   try {
-    const { busNumber, latitude, longitude, speed } = req.body;
+    const { busNumber, latitude, longitude } = req.body;
 
-    // Validate input
-    if (!busNumber || !latitude || !longitude || !speed) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (!busNumber || latitude == null || longitude == null) {
+      return res.status(400).json({
+        message: 'busNumber, latitude and longitude are required'
+      });
     }
 
-    // Save to database
-    const insertedData = await Locations.add({ busNumber, latitude, longitude, speed });
+    const previous = await Locations.getLatest(busNumber);
 
-    // Broadcast to frontend
-    broadcastBusLocation(insertedData[0]);
+    let speed = 0;
+    const now = new Date();
+
+    if (previous) {
+      const distance = calculateDistance(
+        previous.latitude,
+        previous.longitude,
+        latitude,
+        longitude
+      );
+
+      const timeDiff = (now - new Date(previous.timestamp)) / 1000;
+
+      if (timeDiff > 0) {
+        speed = Number(((distance / timeDiff) * 3.6).toFixed(2));
+      }
+    }
+
+    const inserted = await Locations.add({
+      busNumber,
+      latitude,
+      longitude,
+      speed,
+      timestamp: now
+    });
+
+    broadcastBusLocation(inserted[0]);
 
     res.status(201).json({
-      message: 'Location saved and broadcasted successfully!',
-      location: insertedData[0]
+      message: 'Location saved with auto-calculated speed',
+      data: inserted[0]
     });
+
   } catch (error) {
-    console.error('Error adding location:', error.message);
-    res.status(500).json({ message: 'Failed to save location', error: error.message });
+    console.error('❌ addLocation error:', error);
+    res.status(500).json({ message: error.message });
   }
 };
 
 export default addLocation;
+
 
