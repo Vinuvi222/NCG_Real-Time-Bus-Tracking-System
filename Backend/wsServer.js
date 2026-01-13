@@ -1,6 +1,6 @@
 import WebSocket, { WebSocketServer } from 'ws';
 
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ port: 8081, host: '0.0.0.0' }); // ✅ listen on all network interfaces
 const clients = new Set();
 
 wss.on('connection', (ws) => {
@@ -13,7 +13,6 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Function to broadcast a location to all connected clients
 export function broadcastBusLocation(busData) {
   const data = JSON.stringify(busData);
   clients.forEach(client => {
@@ -23,5 +22,6 @@ export function broadcastBusLocation(busData) {
   });
 }
 
-console.log('WebSocket server running on ws://localhost:8080');
+console.log('WebSocket server running on ws://0.0.0.0:8081');
+
 
