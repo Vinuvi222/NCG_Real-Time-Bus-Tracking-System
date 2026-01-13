@@ -1,2 +1,3 @@
-Backend/.env
-Backend/wsTestClient.js
+node_modules
+.env
+
